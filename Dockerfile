@@ -6,7 +6,7 @@ RUN apk add --no-cache zip
 
 WORKDIR /app
 
-# Copy package files first for better caching
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
@@ -18,9 +18,16 @@ COPY . .
 # Build the project
 RUN npm run build
 
-# Generate the zip file
+# Create zip file
 RUN zip -r productivity_suite.zip dist/
 
-# Final stage to export the artifact
-FROM scratch AS export
-COPY --from=builder /app/productivity_suite.zip /
+# Export stage (fixed)
+FROM alpine AS export
+
+WORKDIR /output
+
+# Copy zip from builder
+COPY --from=builder /app/productivity_suite.zip .
+
+# Keep container alive (so compose doesn’t fail)
+CMD ["sh", "-c", "echo Build complete && ls -l /output"]
